@@ -14,7 +14,7 @@ Doorstop is a tool to execute managed .NET assemblies inside Unity as early as p
 
 ## Fork information
 
-This fork is specifically made for the game PEAK. It offers a signature-based in-memory patch to the UnityPlayer to bypass the `-force-vulkan` parameter. This aims to replace https://github.com/CyR1en/UnityPlayerPatcher. Additional configuration is added for flexibility (see configuration below).
+This fork is specifically made for the game PEAK. It offers a signature-based in-memory patch to the UnityPlayer to bypass the `-force-vulkan` parameter. This aims to replace https://github.com/CyR1en/UnityPlayerPatcher but essentially has the same inner working. So if you want to know more about how this works, you can read about it over there. Additional configuration is added for flexibility (see configuration below).
 
 ## Features
 
