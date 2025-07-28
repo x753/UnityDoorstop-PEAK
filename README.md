@@ -2,7 +2,7 @@
   <img height="256" width="256" src="assets/img/icon.png">
 </p>
 
-<h1 align="center">Unity Doorstop</h1>
+<h1 align="center">Unity Doorstop for PEAK</h1>
 
 [![GitHub Workflow Status](https://img.shields.io/github/actions/workflow/status/NeighTools/UnityDoorstop/build-be.yml?branch=master)](https://github.com/NeighTools/UnityDoorstop/actions/workflows/build-be.yml)
 [![nightly.link artifacts](https://img.shields.io/badge/Artifacts-nightly.link-blueviolet)](https://nightly.link/NeighTools/UnityDoorstop/workflows/build-be/master)
@@ -10,8 +10,11 @@
 ***
 
 Doorstop is a tool to execute managed .NET assemblies inside Unity as early as possible.
-
 **This is a total rewrite of UnityDoorstop 3. See [list of breaking changes](CHANGES.md) for more information.**
+
+## Fork information
+
+This fork is specifically made for the game PEAK. It offers a signature-based in-memory patch to the UnityPlayer to bypass the `-force-vulkan` parameter. This aims to replace https://github.com/CyR1en/UnityPlayerPatcher. Additional configuration is added for flexibility (see configuration below).
 
 ## Features
 
@@ -141,7 +144,7 @@ All Doorstop arguments start with `--doorstop-` and always contain an argument. 
 | `--doorstop-mono-debug-address string`            | The address to use for the Mono debugger server.                                                     |
 | `--doorstop-clr-corlib-dir string`                | Path to coreclr library that contains the CoreCLR runtime                                            |
 | `--doorstop-clr-runtime-coreclr-path string`      | Path to the directory containing the managed core libraries for CoreCLR (`mscorlib`, `System`, etc.) |
-
+| `--doorstop-bypass-vulkan bool`                   | If true, UnityPlayer will be patched to bypass force vulkan.                                         |
 
 ## License
 
