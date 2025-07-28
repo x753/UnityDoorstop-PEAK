@@ -89,6 +89,9 @@ static inline void init_config_file() {
     load_path_file(config_path, TEXT("Il2Cpp"), TEXT("corlib_dir"), NULL,
                    &config.clr_corlib_dir);
 
+    load_bool_file(config_path, TEXT("Extra"), TEXT("bypass_vulkan"),
+                   TEXT("false"), &config.bypass_vulkan);
+
     free(config_path);
 }
 
@@ -148,7 +151,8 @@ static inline void init_cmd_args() {
                   load_path_argv);
         PARSE_ARG(TEXT("--doorstop-boot-config-override"),
                   config.boot_config_override, load_path_argv);
-
+        PARSE_ARG(TEXT("--doorstop-bypass-vulkan"), config.bypass_vulkan,
+                  load_bool_argv);
         PARSE_ARG(TEXT("--doorstop-mono-dll-search-path-override"),
                   config.mono_dll_search_path_override, load_path_argv);
         PARSE_ARG(TEXT("--doorstop-mono-debug-enabled"),

@@ -26,6 +26,7 @@ void init_config_defaults() {
     config.redirect_output_log = FALSE;
     config.mono_debug_enabled = FALSE;
     config.mono_debug_suspend = FALSE;
+    config.bypass_vulkan = FALSE;
     config.mono_debug_address = NULL;
     config.target_assembly = NULL;
     config.boot_config_override = NULL;

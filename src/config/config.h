@@ -74,6 +74,14 @@ typedef struct {
      * @brief Path to the CoreCLR core libraries folder.
      */
     char_t *clr_corlib_dir;
+
+    /**
+     * @brief Whether to bypass Vulkan initialization.
+     *
+     * If enabled, Doorstop will bypass Vulkan-related initialization steps.
+     */
+    bool_t bypass_vulkan;
+
 } Config;
 
 extern Config config;
