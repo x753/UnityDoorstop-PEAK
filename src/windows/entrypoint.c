@@ -189,6 +189,104 @@ void redirect_output_log(DoorstopPaths const *paths) {
     LOG("CMD line: %s", new_cmdline_args);
 }
 
+static int c_memcmp(const void *s1, const void *s2, size_t n) {
+    const unsigned char *p1 = (const unsigned char *)s1;
+    const unsigned char *p2 = (const unsigned char *)s2;
+
+    for (size_t i = 0; i < n; i++) {
+        if (p1[i] != p2[i]) {
+            return p1[i] - p2[i];
+        }
+    }
+    return 0;
+}
+
+static void *c_memcpy(void *dest, const void *src, size_t n) {
+    unsigned char *d = (unsigned char *)dest;
+    const unsigned char *s = (const unsigned char *)src;
+
+    for (size_t i = 0; i < n; i++) {
+        d[i] = s[i];
+    }
+
+    return dest;
+}
+
+void patch_no_vulkan_memory() {
+    if (!config.bypass_vulkan)
+        return;
+    HMODULE unity_module = GetModuleHandle(TEXT("UnityPlayer"));
+    if (!unity_module) {
+        LOG("UnityPlayer.dll not found for patching");
+        return;
+    }
+
+    HMODULE kernel32 = GetModuleHandle(TEXT("kernel32.dll"));
+    if (!kernel32) {
+        LOG("Failed to get kernel32.dll handle");
+        return;
+    }
+
+    typedef struct _MODULEINFO_CUSTOM {
+        LPVOID lpBaseOfDll;
+        DWORD SizeOfImage;
+        LPVOID EntryPoint;
+    } MODULEINFO_CUSTOM, *LPMODULEINFO_CUSTOM;
+
+    typedef BOOL(WINAPI * K32GetModuleInformationFunc)(
+        HANDLE hProcess, HMODULE hModule, LPMODULEINFO_CUSTOM lpmodinfo,
+        DWORD cb);
+    K32GetModuleInformationFunc K32GetModuleInformation =
+        (K32GetModuleInformationFunc)GetProcAddress(kernel32,
+                                                    "K32GetModuleInformation");
+
+    if (!K32GetModuleInformation) {
+        LOG("K32GetModuleInformation not available in kernel32.dll");
+        return;
+    }
+
+    MODULEINFO_CUSTOM mod_info;
+    if (!K32GetModuleInformation(GetCurrentProcess(), unity_module, &mod_info,
+                                 sizeof(mod_info))) {
+        LOG("Failed to get UnityPlayer module info");
+        return;
+    }
+
+    unsigned char search_pattern[] = {0xE8, 0xD9, 0x86, 0xF7, 0xFF};
+    unsigned char patch_bytes[] = {0x31, 0xC0, 0x90, 0x90, 0x90};
+
+    BYTE *base_addr = (BYTE *)mod_info.lpBaseOfDll;
+    SIZE_T module_size = mod_info.SizeOfImage;
+
+    LOG("Searching for pattern in UnityPlayer.dll (base: 0x%p, size: 0x%x)",
+        base_addr, module_size);
+
+    for (SIZE_T i = 0; i <= module_size - sizeof(search_pattern); i++) {
+        if (c_memcmp(base_addr + i, search_pattern, sizeof(search_pattern)) ==
+            0) {
+            LOG("Found pattern at offset 0x%p", (void *)(base_addr + i));
+
+            DWORD old_protect;
+            if (VirtualProtect(base_addr + i, sizeof(patch_bytes),
+                               PAGE_EXECUTE_READWRITE, &old_protect)) {
+                c_memcpy(base_addr + i, patch_bytes, sizeof(patch_bytes));
+
+                VirtualProtect(base_addr + i, sizeof(patch_bytes), old_protect,
+                               &old_protect);
+
+                LOG("Successfully patched bytes at 0x%p",
+                    (void *)(base_addr + i));
+                return;
+            } else {
+                LOG("Failed to change memory protection (error: %d)",
+                    GetLastError());
+            }
+        }
+    }
+
+    LOG("Pattern not found in UnityPlayer.dll");
+}
+
 void inject(DoorstopPaths const *paths) {
 
     if (!config.enabled) {
@@ -249,6 +347,7 @@ void inject(DoorstopPaths const *paths) {
         free_logger();
     } else {
         LOG("Hooks installed, marking DOORSTOP_DISALBE = TRUE");
+        patch_no_vulkan_memory();
         setenv(TEXT("DOORSTOP_DISABLE"), TEXT("TRUE"), TRUE);
     }
 }
